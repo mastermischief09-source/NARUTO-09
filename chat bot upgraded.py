@@ -6,10 +6,35 @@ from flask import Flask
 from threading import Thread
 import os
 
-BOT_TOKEN = "8726421843:AAGq9mUvOcIOiFMuyGFiNQ__SWiEglgaj8I"
-import os
+# =========================
+# KEEP RENDER WEB SERVICE ALIVE
+# =========================
 
-groq_api_key = os.getenv("Groq_API")
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run():
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+keep_alive()
+
+# =========================
+# TOKENS
+# =========================
+
+BOT_TOKEN = os.getenv("Bot_Token")
+GROQ_API_KEY = os.getenv("Groq_API")
+
+# =========================
+# CHAT FUNCTION
+# =========================
 
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -24,11 +49,10 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "model": "llama-3.3-70b-versatile",
 
         "messages": [
-
-      {
-    "role": "system",
-    "content": "Reply naturally and casually like a normal human conversation."
-},
+            {
+                "role": "system",
+                "content": "Reply naturally and casually like a normal human conversation."
+            },
 
             {
                 "role": "user",
@@ -37,27 +61,35 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
     }
 
-    response = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        headers=headers,
-        json=data
-    )
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers=headers,
+            json=data
+        )
 
-    result = response.json()
+        result = response.json()
 
-    if "choices" in result:
+        if "choices" in result:
+            bot_reply = result["choices"][0]["message"]["content"]
+        else:
+            bot_reply = f"API Error 😢\n{result}"
 
-        bot_reply = result["choices"][0]["message"]["content"]
-
-    else:
-
-        bot_reply = f"API Error 😢\n{result}"
+    except Exception as e:
+        bot_reply = f"Error 😢\n{e}"
 
     await update.message.reply_text(bot_reply)
 
-app = ApplicationBuilder().token(BOT_TOKEN).build()
-
-app.add_handler(MessageHandler(filters.TEXT, chat))
+# =========================
+# START BOT
+# =========================
 
 print("Groq AI Chat Bot Running...")
-app.run_polling()
+
+app_bot = ApplicationBuilder().token(BOT_TOKEN).build()
+
+app_bot.add_handler(
+    MessageHandler(filters.TEXT & ~filters.COMMAND, chat)
+)
+
+app_bot.run_polling()
