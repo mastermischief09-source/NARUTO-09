@@ -2,6 +2,10 @@ import requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
+from flask import Flask
+from threading import Thread
+import os
+
 BOT_TOKEN = "8726421843:AAGq9mUvOcIOiFMuyGFiNQ__SWiEglgaj8I"
 import os
 
