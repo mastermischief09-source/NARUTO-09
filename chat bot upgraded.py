@@ -3,7 +3,9 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
 BOT_TOKEN = "8726421843:AAGq9mUvOcIOiFMuyGFiNQ__SWiEglgaj8I"
-GROQ_API_KEY = "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"
+import os
+
+groq_api_key = os.getenv("Groq_API")
 
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
